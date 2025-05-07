@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Air Quality - Real Time Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      background: #111;
+      color: white;
+      text-align: center;
+      font-family: sans-serif;
+    }
+    canvas {
+      background: white;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+    #readings {
+      margin-top: 15px;
+      font-size: 1.1em;
+      line-height: 1.6;
+      background: #222;
+      padding: 10px;
+      border-radius: 6px;
+      display: inline-block;
+    }
+#readings span {
+      display: inline-block;
+      min-width: 100px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Air Quality - Real Time Dashboard</h1>
+
+  <!-- Live value summary -->
+  <div id="readings">
+    <span>PM2.5: --</span>
+    <span>PM10: --</span>
+    <span>eCO₂: --</span>
+    <span>TVOC: --</span>
+    <span>Temp: --</span>
+    <span>Humidity: --</span>
+  </div>
+
+  <canvas id="chart" width="1000" height="400"></canvas>
+
+  <script>
+const ctx = document.getElementById('chart').getContext('2d');
+    const readingsEl = document.getElementById('readings').children;
+
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [
+          { label: 'PM2.5 (µg/m³)', borderColor: 'red', data: [], fill: false, tension: 0.4 },
+          { label: 'PM10 (µg/m³)', borderColor: 'orange', data: [], fill: false, tension: 0.4 },
+          { label: 'eCO₂ (ppm)', borderColor: 'green', data: [], fill: false, tension: 0.4 },
+          { label: 'TVOC (ppb)', borderColor: 'blue', data: [], fill: false, tension: 0.4 },
+          { label: 'Temp (°C)', borderColor: 'purple', data: [], fill: false, tension: 0.4 },
+          { label: 'Humidity (%)', borderColor: 'teal', data: [], fill: false, tension: 0.4 }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            type: 'logarithmic',
+            min: 1,
+            title: {
+              display: true,
+              text: 'Sensor Values (Log Scale)'
+            },
+
+ticks: {
+              callback: val => Number(val).toString()
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: 'Time'
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: {
+              color: 'white'
+            }
+          }
+        }
+      }
+    });
+
+    function fetchData() {
+      fetch('/latest')
+        .then(response => response.json())
+        .then(data => {
+          const now = new Date().toLocaleTimeString();
+// Push to chart
+          chart.data.labels.push(now);
+          chart.data.datasets[0].data.push(Math.max(data.pm25, 1));
+          chart.data.datasets[1].data.push(Math.max(data.pm10, 1));
+          chart.data.datasets[2].data.push(Math.max(data.eco2, 1));
+          chart.data.datasets[3].data.push(Math.max(data.tvoc, 1));
+          chart.data.datasets[4].data.push(Math.max(data.temp, 1));
+          chart.data.datasets[5].data.push(Math.max(data.humidity, 1));
+
+          if (chart.data.labels.length > 30) {
+            chart.data.labels.shift();
+            chart.data.datasets.forEach(ds => ds.data.shift());
+          }
+
+          chart.update();
+
+          // Update reading summary
+          readingsEl[0].textContent = `PM2.5: ${data.pm25}`;
+          readingsEl[1].textContent = `PM10: ${data.pm10}`;
+          readingsEl[2].textContent = `eCO₂: ${data.eco2}`;
+          readingsEl[3].textContent = `TVOC: ${data.tvoc}`;
+          readingsEl[4].textContent = `Temp: ${data.temp}°C`;
+          readingsEl[5].textContent = `Humidity: ${data.humidity}%`;
+        })
+        .catch(err => console.error('Error fetching /latest:', err));
+   }
+
+    setInterval(fetchData, 5000);
+  </script>
+</body>
+</html>
+
+
