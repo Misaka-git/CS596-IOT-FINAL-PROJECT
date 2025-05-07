@@ -1,4 +1,7 @@
+Luming Qi CS596 IOT
 
+Youtube website
+https://www.youtube.com/watch?v=rOfBI49xPAM
 # 🧪 Air Quality Monitoring Dashboard
 
 A real-time environmental monitoring system using an ESP32, sensors (DHT22, SDS011, SGP30), a Flask server, and a web dashboard. This project collects and visualizes temperature, humidity, CO₂, TVOC, PM2.5, and PM10 data. It also sends email alerts when pollutant levels are too high.
